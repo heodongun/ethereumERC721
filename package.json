@@ -1,0 +1,24 @@
+{
+  "name": "ethereum-erc721-example",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Hardhat 기반 ERC-721(MyNft) 예제 프로젝트",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deploy.ts --network sepolia"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "@types/node": "^20.11.0",
+    "hardhat": "^2.22.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.0.2",
+    "dotenv": "^16.3.1",
+    "ethers": "^6.10.0"
+  }
+}

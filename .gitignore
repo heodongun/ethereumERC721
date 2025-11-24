@@ -1,0 +1,14 @@
+# 의존성 / 빌드 산출물
+node_modules/
+artifacts/
+cache/
+typechain-types/
+dist/
+
+# 환경 변수
+.env
+
+# OS/에디터
+.DS_Store
+*.log
+*.tsbuildinfo
