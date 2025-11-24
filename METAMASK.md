@@ -43,6 +43,8 @@ npx hardhat node
 ```bash
 cd ~/Desktop/ethereumERC721
 npx hardhat run scripts/deploy.ts --network localhost
+## dongunCoin(명함) 배포
+npx hardhat run scripts/deploy-donguncoin.ts --network localhost
 ```
 - 출력되는 컨트랙트 주소를 메모 (예: `0x5FbD...aa3`).
 
@@ -51,6 +53,8 @@ npx hardhat run scripts/deploy.ts --network localhost
 ```bash
 cd ~/Desktop/ethereumERC721
 npx hardhat run scripts/deploy.ts --network sepolia
+## dongunCoin(명함) 배포
+npx hardhat run scripts/deploy-donguncoin.ts --network sepolia
 ```
 - 콘솔에 표시된 컨트랙트 주소를 메모.
 

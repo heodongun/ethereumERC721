@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>dongunCoin NFT 대시보드</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.10.0/dist/ethers.min.js"></script>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #1f2937;
+      --accent: #38bdf8;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --danger: #f87171;
+      --success: #34d399;
+      --radius: 12px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at 20% 20%, #111827, #0b1222 50%, #0a0f1d);
+      color: var(--text);
+    }
+    header {
+      padding: 24px;
+      background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+    h1 { margin: 0; font-size: 28px; }
+    main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .grid {
+      display: grid;
+      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.25);
+    }
+    .card h2 { margin: 0 0 12px; font-size: 20px; }
+    label { display: block; margin: 8px 0 4px; color: var(--muted); font-size: 14px; }
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #1f2937;
+      background: #0b1220;
+      color: var(--text);
+      font-size: 14px;
+    }
+    button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #38bdf8 0%, #6366f1 100%);
+      color: #0b1020;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.2s ease;
+    }
+    button:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.35); }
+    .row { display: flex; gap: 10px; }
+    .row > * { flex: 1; }
+    .tag { display: inline-block; padding: 4px 8px; border-radius: 8px; background: #0b1220; color: var(--muted); font-size: 12px; }
+    .status { margin-top: 10px; min-height: 22px; font-size: 14px; }
+    .success { color: var(--success); }
+    .error { color: var(--danger); }
+    .divider { border-top: 1px solid var(--border); margin: 14px 0; }
+    code { background: #0b1220; padding: 3px 6px; border-radius: 6px; }
+    @media (max-width: 600px) { .row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>dongunCoin NFT 대시보드</h1>
+    <p>명함 정보를 NFT로 발행/업데이트 · Metamask로 바로 사용</p>
+  </header>
+  <main>
+    <div class="grid">
+      <div class="card">
+        <h2>1. 지갑 연결</h2>
+        <p>메타마스크 네트워크를 <code>Hardhat(31337)</code> 또는 <code>Sepolia(11155111)</code>로 맞추세요.</p>
+        <button id="connectBtn">Metamask 연결</button>
+        <div class="status" id="accountStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>2. 컨트랙트 설정</h2>
+        <label>dongunCoin 주소</label>
+        <input id="contractAddress" placeholder="예: 0x..." />
+        <button id="loadContractBtn">연결</button>
+        <div class="status" id="contractStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>3. 명함 민팅 (오너만)</h2>
+        <label>받을 지갑 주소</label>
+        <input id="mintTo" placeholder="0x... (생략 시 본인)" />
+        <label>메타데이터 URI (IPFS/HTTPS)</label>
+        <textarea id="mintUri" rows="3" placeholder="https://... 또는 ipfs://..."></textarea>
+        <button id="mintBtn">민팅</button>
+        <div class="status" id="mintStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>4. 명함 수정 (소유자/승인자)</h2>
+        <label>토큰 ID</label>
+        <input id="updateTokenId" placeholder="예: 1" />
+        <label>새 메타데이터 URI</label>
+        <textarea id="updateUri" rows="3" placeholder="https://... 또는 ipfs://..."></textarea>
+        <button id="updateBtn">업데이트</button>
+        <div class="status" id="updateStatus"></div>
+      </div>
+
+      <div class="card">
+        <h2>5. 조회</h2>
+        <div class="row">
+          <div>
+            <label>토큰 ID (owner)</label>
+            <input id="queryOwnerId" placeholder="예: 1" />
+            <button id="ownerBtn">ownerOf 조회</button>
+            <div class="status" id="ownerStatus"></div>
+          </div>
+          <div>
+            <label>토큰 ID (tokenURI)</label>
+            <input id="queryUriId" placeholder="예: 1" />
+            <button id="uriBtn">tokenURI 조회</button>
+            <div class="status" id="uriStatus"></div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <p class="tag">Tip</p>
+        <p style="margin:6px 0 0;">메타데이터(JSON)를 IPFS나 HTTPS에 올려 <code>tokenURI</code>로 설정하세요.</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const abi = [
+      "function mintCard(address to, string cardURI) public returns (uint256)",
+      "function updateCardURI(uint256 tokenId, string newCardURI) public",
+      "function ownerOf(uint256 tokenId) public view returns (address)",
+      "function tokenURI(uint256 tokenId) public view returns (string)"
+    ];
+
+    let provider, signer, contract;
+
+    const connectBtn = document.getElementById("connectBtn");
+    const accountStatus = document.getElementById("accountStatus");
+    const contractAddressInput = document.getElementById("contractAddress");
+    const contractStatus = document.getElementById("contractStatus");
+    const mintBtn = document.getElementById("mintBtn");
+    const mintStatus = document.getElementById("mintStatus");
+    const loadContractBtn = document.getElementById("loadContractBtn");
+    const updateBtn = document.getElementById("updateBtn");
+    const updateStatus = document.getElementById("updateStatus");
+    const ownerBtn = document.getElementById("ownerBtn");
+    const ownerStatus = document.getElementById("ownerStatus");
+    const uriBtn = document.getElementById("uriBtn");
+    const uriStatus = document.getElementById("uriStatus");
+
+    async function connectWallet() {
+      if (!window.ethereum) {
+        accountStatus.innerHTML = `<span class="error">Metamask를 설치해주세요.</span>`;
+        return;
+      }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      const accounts = await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      const network = await provider.getNetwork();
+      accountStatus.innerHTML = `<span class="success">연결됨: ${accounts[0]} (chainId: ${network.chainId})</span>`;
+    }
+
+    function loadContract() {
+      if (!signer) {
+        contractStatus.innerHTML = `<span class="error">지갑을 먼저 연결하세요.</span>`;
+        return;
+      }
+      const addr = contractAddressInput.value.trim();
+      if (!addr) {
+        contractStatus.innerHTML = `<span class="error">컨트랙트 주소를 입력하세요.</span>`;
+        return;
+      }
+      try {
+        contract = new ethers.Contract(addr, abi, signer);
+        contractStatus.innerHTML = `<span class="success">컨트랙트 연결 완료: ${addr}</span>`;
+      } catch (err) {
+        contractStatus.innerHTML = `<span class="error">주소가 올바른지 확인: ${err.message}</span>`;
+      }
+    }
+
+    async function mintCard() {
+      if (!contract) return (mintStatus.innerHTML = `<span class="error">컨트랙트를 먼저 연결하세요.</span>`);
+      const to = document.getElementById("mintTo").value.trim() || (await signer.getAddress());
+      const uri = document.getElementById("mintUri").value.trim();
+      if (!uri) return (mintStatus.innerHTML = `<span class="error">메타데이터 URI를 입력하세요.</span>`);
+      try {
+        mintStatus.innerHTML = "트랜잭션 전송 중...";
+        const tx = await contract.mintCard(to, uri);
+        const receipt = await tx.wait();
+        const log = receipt.logs.find((l) => true);
+        mintStatus.innerHTML = `<span class="success">민팅 완료. tx: ${tx.hash}</span>`;
+      } catch (err) {
+        mintStatus.innerHTML = `<span class="error">${err.shortMessage || err.message}</span>`;
+      }
+    }
+
+    async function updateCard() {
+      if (!contract) return (updateStatus.innerHTML = `<span class="error">컨트랙트를 먼저 연결하세요.</span>`);
+      const tokenId = document.getElementById("updateTokenId").value.trim();
+      const uri = document.getElementById("updateUri").value.trim();
+      if (!tokenId || !uri) return (updateStatus.innerHTML = `<span class="error">토큰 ID와 URI를 입력하세요.</span>`);
+      try {
+        updateStatus.innerHTML = "트랜잭션 전송 중...";
+        const tx = await contract.updateCardURI(tokenId, uri);
+        await tx.wait();
+        updateStatus.innerHTML = `<span class="success">업데이트 완료. tx: ${tx.hash}</span>`;
+      } catch (err) {
+        updateStatus.innerHTML = `<span class="error">${err.shortMessage || err.message}</span>`;
+      }
+    }
+
+    async function queryOwner() {
+      if (!contract) return (ownerStatus.innerHTML = `<span class="error">컨트랙트를 먼저 연결하세요.</span>`);
+      const tokenId = document.getElementById("queryOwnerId").value.trim();
+      if (!tokenId) return (ownerStatus.innerHTML = `<span class="error">토큰 ID를 입력하세요.</span>`);
+      try {
+        const owner = await contract.ownerOf(tokenId);
+        ownerStatus.innerHTML = `<span class="success">ownerOf(${tokenId}) = ${owner}</span>`;
+      } catch (err) {
+        ownerStatus.innerHTML = `<span class="error">${err.shortMessage || err.message}</span>`;
+      }
+    }
+
+    async function queryURI() {
+      if (!contract) return (uriStatus.innerHTML = `<span class="error">컨트랙트를 먼저 연결하세요.</span>`);
+      const tokenId = document.getElementById("queryUriId").value.trim();
+      if (!tokenId) return (uriStatus.innerHTML = `<span class="error">토큰 ID를 입력하세요.</span>`);
+      try {
+        const uri = await contract.tokenURI(tokenId);
+        uriStatus.innerHTML = `<span class="success">tokenURI(${tokenId}) = ${uri}</span>`;
+      } catch (err) {
+        uriStatus.innerHTML = `<span class="error">${err.shortMessage || err.message}</span>`;
+      }
+    }
+
+    connectBtn.onclick = connectWallet;
+    loadContractBtn.onclick = loadContract;
+    mintBtn.onclick = mintCard;
+    updateBtn.onclick = updateCard;
+    ownerBtn.onclick = queryOwner;
+    uriBtn.onclick = queryURI;
+  </script>
+</body>
+</html>
