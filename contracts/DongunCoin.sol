@@ -19,7 +19,9 @@ contract DongunCoin is ERC721URIStorage, Ownable {
     /// @param cardURI 메타데이터 URI(예: IPFS CID, HTTPS URL 등)
     function mintCard(address to, string calldata cardURI) external onlyOwner returns (uint256) {
         uint256 tokenId = _nextTokenId;
-        _nextTokenId++;
+        unchecked {
+            _nextTokenId++;
+        }
 
         _safeMint(to, tokenId);
         _setTokenURI(tokenId, cardURI);
@@ -32,8 +34,7 @@ contract DongunCoin is ERC721URIStorage, Ownable {
     /// @param tokenId 수정할 토큰 ID
     /// @param newCardURI 새 메타데이터 URI
     function updateCardURI(uint256 tokenId, string calldata newCardURI) external {
-        address owner = _ownerOf(tokenId);
-        require(_isAuthorized(owner, msg.sender, tokenId), "Not owner nor approved");
+        require(_ownerOf(tokenId) == msg.sender, "Not the owner");
         _setTokenURI(tokenId, newCardURI);
         emit CardUpdated(tokenId, newCardURI);
     }

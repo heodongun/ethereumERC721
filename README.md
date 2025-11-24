@@ -13,8 +13,8 @@ Hardhat, OpenZeppelin, Ethers v6를 사용한 ERC-721 예제입니다. 배포 �
 ### 온라인 명함 NFT (dongunCoin)
 - 컨트랙트 이름: `DongunCoin`
 - 상속: `ERC721URIStorage`, `Ownable`
-- `mintCard(address to, string cardURI)`: 오너가 명함 NFT 발행
-- `updateCardURI(uint256 tokenId, string newCardURI)`: 소유자/승인 계정이 명함 정보 URI 갱신
+- `mintCard(address to, string cardURI)`: 오너가 명함 NFT 발행 (`CardMinted` 이벤트 발생)
+- `updateCardURI(uint256 tokenId, string newCardURI)`: 토큰 소유자만 명함 정보 URI 갱신 가능 (`CardUpdated` 이벤트 발생)
 - 사용 예: 명함 정보를 JSON 메타데이터로 만들고(IPFS/HTTPS), `cardURI`에 전달
 
 ## 사전 준비
@@ -36,6 +36,12 @@ PRIVATE_KEY="0xaaaaaaaa..."   # 메타마스크 계정의 프라이빗 키
 ```bash
 npm install
 npx hardhat compile
+```
+
+## 테스트 실행
+추가된 테스트를 실행하여 컨트랙트가 올바르게 동작하는지 확인합니다.
+```bash
+npx hardhat test
 ```
 
 ## 로컬 네트워크에서 테스트
